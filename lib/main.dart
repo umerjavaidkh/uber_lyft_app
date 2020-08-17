@@ -2,15 +2,29 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:get_it/get_it.dart';
+import 'package:google_maps_webservice/places.dart';
+import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:uber_lyft_app/utils/draw_circle.dart';
+import 'package:lazy_evaluation/lazy_evaluation.dart';
+import 'package:uber_lyft_app/utils/LocationProvider.dart';
+import 'package:uber_lyft_app/utils/RequestPlace.dart';
 import 'package:uber_lyft_app/utils/draw_request_location_icon.dart';
-import 'package:uber_lyft_app/utils/styles.dart';
+
+
+const kGoogleApiKey = "your_key_here";
+
+// This is our global ServiceLocator
+GetIt getIt = GetIt.instance;
 
 void main() {
+  getIt.registerSingleton( LocationProvider());
   runApp(MyApp());
 }
+
+
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -28,6 +42,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
   final String title;
@@ -39,9 +54,22 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   Completer<GoogleMapController> _controller = Completer();
 
-  static const LatLng _center = const LatLng(45.521563, -122.677433);
+  final locationService = getIt.get<LocationProvider>();
+
+  LatLng center = null;
+
+  LatLng  pickupLocation;
+
+  LatLng  dropLocation;
 
   String _mapStyle;
+
+  String pickUpLocationTag = "Pickup Location";
+
+  String dropLocationTag = "Drop Location";
+
+
+
 
   @override
   void initState() {
@@ -50,32 +78,81 @@ class _MyHomePageState extends State<MyHomePage> {
     rootBundle.loadString('assets/map_style.txt').then((string) {
       _mapStyle = string;
     });
+
+    _getUserLocation();
   }
+
+
+  void _getUserLocation() async {
+    Position position = await locationService.provideCurrentLocation();
+    setState(() {
+      center = LatLng(position.latitude, position.longitude);
+     /*if(_controller.isCompleted){
+       _controller.future.then((value) => value.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+         target: center,
+         zoom: 11.0,
+       ))));*/
+     //}
+    });
+  }
+
+  void _getUserLocationName(LatLng latLng) async {
+
+    Placemark position = await locationService.getAddressFromLocation(latLng.latitude, latLng.longitude);
+    setState(() {
+      pickupLocation=LatLng(position.position.longitude, position.position.longitude);
+      pickUpLocationTag=position.name+", "+position.administrativeArea;
+    });
+  }
+
+
 
   void _onMapCreated(GoogleMapController mycontroller) {
     _controller.complete(mycontroller);
-
     mycontroller.setMapStyle(_mapStyle);
+    _getUserLocationName(center);
   }
 
   @override
   Widget build(BuildContext context) {
+
+
+
+
     return Scaffold(
+        resizeToAvoidBottomPadding: false,
         body: Stack(
-      children: <Widget>[
-        GoogleMap(
-          onMapCreated: _onMapCreated,
-          initialCameraPosition: CameraPosition(
-            target: _center,
-            zoom: 11.0,
-          ),
-        ),
-        pickAndDropLayout(),
-      ],
-    ));
+
+          children: <Widget>[
+
+            if(center!=null)
+            Container(
+              color: Colors.white24,
+
+              child: GoogleMap(
+                onMapCreated: _onMapCreated,
+                initialCameraPosition: CameraPosition(
+                  target: center,
+                  zoom: 15.0,
+                ),
+              ),
+            )
+
+            else Container(
+              color: Color(0x588ca4),
+                alignment: Alignment.center,
+                child: CircularProgressIndicator(),
+            )
+            ,
+            pickAndDropLayout(),
+          ],
+        ));
   }
 
   Container pickAndDropLayout() {
+
+    GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: kGoogleApiKey);
+
     return Container(
       height: 100,
       color: Colors.white,
@@ -88,16 +165,11 @@ class _MyHomePageState extends State<MyHomePage> {
           Container(
             width: 50,
             height: 100,
-            child: Column(
-              children: <Widget>[
-                Container(
-                  margin: EdgeInsets.only(top: 27),
-                  child: CustomPaint(
-                      painter: ReqLocIcon(
-                          radius: 5.0, color: Colors.black, lineHeight: 40)),
-                ),
-              ],
-            ),
+            alignment: Alignment.topCenter,
+            margin: EdgeInsets.only(top: 27),
+            child: CustomPaint(
+                painter: ReqLocIcon(
+                    radius: 5.0, color: Colors.black, lineHeight: 35)),
           ),
           Container(
             margin: EdgeInsets.only(right: 5),
@@ -109,43 +181,61 @@ class _MyHomePageState extends State<MyHomePage> {
                   height: 10,
                 ),
                 Container(
-                  width: double.infinity,
+                    width: double.infinity,
                     padding: EdgeInsets.all(6),
                     color: Color(0xfff3f3f4),
                     margin: EdgeInsets.all(5),
                     child: Material(
                       color: Colors.white.withOpacity(0.0),
                       child: InkWell(
-                        onTap: () {
-                          print("Hello world");
+                        onTap: () async {
+                          Prediction p = await getPaceOverlay(context);
+                          if (p != null) {
+                            PlacesDetailsResponse detail =
+                                await _places.getDetailsByPlaceId(p.placeId);
+                            final lat = detail.result.geometry.location.lat;
+                            final lng = detail.result.geometry.location.lng;
+                            pickupLocation=LatLng(lat, lng);
+                            setState(() {
+                              pickUpLocationTag = detail.result.name;
+                            });
+                          }
                         },
                         child: Text(
-                          "Pickup Location",
+                          pickUpLocationTag,
                           style: TextStyle(
                               fontSize: 15.0, height: 1, color: Colors.grey),
                         ),
                       ),
-                    )
-                    ),
+                    )),
                 Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(6),
-                  color: Color(0xfff3f3f4),
-                  margin: EdgeInsets.all(5),
-                  child: Material(
-                    color: Colors.white.withOpacity(0.0),
-                    child: InkWell(
-                      onTap: () {
-                        print("Hello world");
-                      },
-                      child: Text(
-                        "Drop Location",
-                        style: TextStyle(
-                            fontSize: 15.0, height: 1, color: Colors.grey),
+                    width: double.infinity,
+                    padding: EdgeInsets.all(6),
+                    color: Color(0xfff3f3f4),
+                    margin: EdgeInsets.all(5),
+                    child: Material(
+                      color: Colors.white.withOpacity(0.0),
+                      child: InkWell(
+                        onTap: () async {
+                          Prediction p = await getPaceOverlay(context);
+                          if (p != null) {
+                            PlacesDetailsResponse detail =
+                                await _places.getDetailsByPlaceId(p.placeId);
+                            final lat = detail.result.geometry.location.lat;
+                            final lng = detail.result.geometry.location.lng;
+                            dropLocation=LatLng(lat,lng);
+                            setState(() {
+                              dropLocationTag = detail.result.name;
+                            });
+                          }
+                        },
+                        child: Text(
+                          dropLocationTag,
+                          style: TextStyle(
+                              fontSize: 15.0, height: 1, color: Colors.grey),
+                        ),
                       ),
-                    ),
-                  )
-                ),
+                    )),
               ],
             ),
           )
@@ -153,4 +243,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+
 }
