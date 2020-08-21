@@ -2,6 +2,17 @@
 
 A new Flutter application.
 
+# To Run
+
+Go to ios/runner then AppDelegate.swift 
+replace GMSServices.provideAPIKey("your_key_here") with your key.
+
+Go to android/app/src/main then AndroidManifest.xml
+replace android:value="your_key_here"  with your key.
+
+Go to lib main.dart 
+replace const kGoogleApiKey = "your_key_here" with your key.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
