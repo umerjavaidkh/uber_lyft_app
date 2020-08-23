@@ -1,25 +1,26 @@
 import 'dart:async';
 import 'dart:core';
+import 'dart:math';
 
+import 'package:drawing_animation/drawing_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_maps_webservice/places.dart';
-import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:lazy_evaluation/lazy_evaluation.dart';
+import 'package:uber_lyft_app/utils/AnimatePolyLine.dart';
+import 'package:uber_lyft_app/utils/Constants.dart';
 import 'package:uber_lyft_app/utils/IconsUtils.dart';
 import 'package:uber_lyft_app/utils/LocationProvider.dart';
+import 'package:uber_lyft_app/utils/MapUtils.dart';
 import 'package:uber_lyft_app/utils/RequestPlace.dart';
 import 'package:uber_lyft_app/utils/draw_request_location_icon.dart';
 
 import 'MapsPresenter.dart';
 import 'MapsView.dart';
-import 'NetworkService.dart';
-
-const kGoogleApiKey = "your_key_here";
+import '../NetworkService.dart';
 
 // This is our global ServiceLocator
 GetIt getIt = GetIt.instance;
@@ -51,13 +52,13 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  MyHomePageState createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>
+class MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin
     implements MapsView {
-  Completer<GoogleMapController> _controller = Completer();
+  GoogleMapController _controller;
 
   final locationService = getIt.get<LocationProvider>();
 
@@ -81,9 +82,17 @@ class _MyHomePageState extends State<MyHomePage>
 
   MapsPresenter mapsPresenter;
 
-  List<Marker> nearByCabMarkers=List<Marker>();
+  List<Marker> nearByCabMarkers = List<Marker>();
 
-  BitmapDescriptor cabIcon=BitmapDescriptor.defaultMarker;
+  Marker originMarker;
+
+  Marker destinationMarker;
+
+  Set<Polyline> cabToPickUpLine = {};
+
+  Polyline pickUpToDestination;
+
+  BitmapDescriptor cabIcon = BitmapDescriptor.defaultMarker;
 
   @override
   void initState() {
@@ -122,27 +131,21 @@ class _MyHomePageState extends State<MyHomePage>
         latLng.latitude, latLng.longitude);
     setState(() {
       pickupLocation =
-          LatLng(position.position.longitude, position.position.longitude);
+          LatLng(position.position.latitude, position.position.longitude);
       pickUpLocationTag = position.name + ", " + position.administrativeArea;
     });
-
-
   }
 
-
-  void getCabIcon( )async{
-    cabIcon= await IconUtils.createMarkerImageFromAsset();
+  void getCabIcon() async {
+    cabIcon = await IconUtils.createMarkerImageFromAsset();
   }
-
 
   void _onMapCreated(GoogleMapController mycontroller) {
-    _controller.complete(mycontroller);
+    _controller=mycontroller;
     mycontroller.setMapStyle(_mapStyle);
     mapLoading = false;
     _getUserLocationName(center);
-
     mapsPresenter.requestNearbyCabs(center);
-
   }
 
   @override
@@ -159,12 +162,15 @@ class _MyHomePageState extends State<MyHomePage>
                 child: Container(
                   color: Colors.white24,
                   child: GoogleMap(
+                    myLocationEnabled: true,
                     onMapCreated: _onMapCreated,
                     initialCameraPosition: CameraPosition(
                       target: center,
                       zoom: 15.0,
                     ),
                     markers: nearByCabMarkers.toSet(),
+                    polylines: cabToPickUpLine,
+                    mapType: MapType.normal,
                   ),
                 ),
               )
@@ -181,7 +187,8 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   Container pickAndDropLayout() {
-    GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: kGoogleApiKey);
+    GoogleMapsPlaces _places =
+        GoogleMapsPlaces(apiKey: Constants.kGoogleApiKey);
 
     return Container(
       height: 100,
@@ -312,8 +319,7 @@ class _MyHomePageState extends State<MyHomePage>
             setState(() {
               requestCabClicked = true;
             });
-
-            //mapsPresenter.requestNearbyCabs(pickupLocation);
+            mapsPresenter.requestCab(pickupLocation, dropLocation);
           },
           child: Text(
             'Request Cab'.toUpperCase(),
@@ -323,8 +329,6 @@ class _MyHomePageState extends State<MyHomePage>
       ),
     );
   }
-
-
 
   @override
   informCabArrived() {
@@ -362,33 +366,50 @@ class _MyHomePageState extends State<MyHomePage>
     throw UnimplementedError();
   }
 
-
-
-
   @override
   showNearbyCabs(List<LatLng> latLngList) {
-
-    int count=0;
+    int count = 0;
     for (LatLng item in latLngList) {
       nearByCabMarkers.add(Marker(
-          markerId:MarkerId(count.toString()),
-          icon: cabIcon,
-          position:item
-      ));
+          markerId: MarkerId(count.toString()), icon: cabIcon, position: item));
       count++;
     }
 
-    setState(() {
-
-    });
-
+    setState(() {});
   }
 
   @override
-  showPath(List<LatLng> latLngList) {
-    // TODO: implement showPath
-    throw UnimplementedError();
+  showPath(List<LatLng> latLngList) async {
+    Polyline polyline1 = Polyline(
+        visible: true,
+        polylineId: PolylineId("12345"),
+        points: latLngList,
+        color: Colors.red,
+        width: 3,
+        startCap: Cap.roundCap,
+        endCap: Cap.buttCap);
+
+    setState(() {
+      nearByCabMarkers.clear();
+      nearByCabMarkers.add(Marker(anchor: Offset(0.5, 0.5),
+          markerId: MarkerId("123"), icon: cabIcon, position: latLngList[0]));
+      nearByCabMarkers.add(Marker(
+          markerId: MarkerId("124"),  position: latLngList[latLngList.length-1]));
+    });
+
+
+      AnimatePolyLine(latLngList,polyline1,this, onFinish: (){
+
+      },
+    ).animateMe();
+
+    MapUtils.setMapFitToPolyLine(cabToPickUpLine,_controller);
+
   }
+
+
+
+
 
   @override
   showRoutesNotAvailableError() {

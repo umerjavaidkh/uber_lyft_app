@@ -2,14 +2,24 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter_polyline_points/flutter_polyline_points.dart' as PolyLineLib;
+import 'package:google_directions_api/google_directions_api.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:uber_lyft_app/utils/Constants.dart';
 
+import 'JsonMessage.dart';
 import 'WebSocketListener.dart';
 
 class Simulator{
 
 
+    LatLng currentLocation;
+
+   /* LatLng pickUpLocation;
+
+    LatLng dropUpLocation;*/
+
+    var pickUpPath = List<LatLng>();
 
 
     static getFakeNearByCabs(LatLng userLoc,WebSocketListener webSocketListener){
@@ -19,7 +29,7 @@ class Simulator{
     List nearByCabs= List<LatLng>();
 
     JsonMessage jsonMessage=JsonMessage();
-    jsonMessage.tag=Constants.requestForCabs;
+    jsonMessage.tag=Constants.nearByCabs;
 
     for (int  i=0; i<=size; i++) {
 
@@ -50,34 +60,85 @@ class Simulator{
   }
 
 
-}
 
-class JsonMessage{
+    requestCab( LatLng pickUpLocation, LatLng dropLocation, WebSocketListener webSocketListener) {
 
-  String tag;
-  List<LatLng>   data;
 
-  JsonMessage({this.tag, this.data}){
-    this.tag;
-    this.data;
-  }
+       /* this.pickUpLocation=pickUpLocation;
+        this.dropUpLocation=dropLocation;*/
 
-  JsonMessage.fromJson(Map<String, dynamic> json){
-    tag = json['tag'];
-    //data = List.castFrom<dynamic, LatLng>(json['data']); //json['data'].cast<List<LatLng>>();
-    data=List<LatLng>();
-    for (var item in json['data']) {
-      data.add(LatLng.fromJson(item));
+        var randomOperatorForLat = Random().nextInt(1);
+        var randomOperatorForLng = Random(1).nextInt(1);
+
+        var randomDeltaForLat = ((10+Random().nextInt(40)) /10000.00).toDouble();
+        var randomDeltaForLng = ((10+Random().nextInt(40)) /10000.00).toDouble();
+
+        if (randomOperatorForLat == 1) {
+          randomDeltaForLat *= -1;
+        }
+        if (randomOperatorForLng == 1) {
+          randomDeltaForLng *= -1;
+        }
+
+        var latFakeNearby =  pickUpLocation.latitude + randomDeltaForLat;
+        var lngFakeNearby = pickUpLocation.longitude + randomDeltaForLng;
+
+        var bookedCabCurrentLocation = LatLng(latFakeNearby, lngFakeNearby);
+
+        DirectionsService.init(Constants.kGoogleApiKey);
+
+        final directinosService = DirectionsService();
+
+        final request = DirectionsRequest(
+          origin: "${pickUpLocation.latitude} ${pickUpLocation.longitude}",
+          //destination: "${dropLocation.latitude} ${dropLocation.longitude}",
+          destination: "${bookedCabCurrentLocation.latitude} ${bookedCabCurrentLocation.longitude}",
+          travelMode:TravelMode.driving,
+        );
+
+        pickUpPath.clear();
+
+        directinosService.route(request,
+                (DirectionsResult response, DirectionsStatus status) {
+              if (status == DirectionsStatus.ok) {
+
+                if(response.routes.isEmpty){
+
+                  JsonMessage jsonMessage=JsonMessage();
+                  jsonMessage.tag=Constants.routesNotAvailable;
+                  webSocketListener.onMessage(jsonEncode(jsonMessage));
+                }else{
+
+                  var routesList=response.routes.removeLast();
+
+                 // for (DirectionsRoute route in routesList) {
+                    OverviewPolyline path = routesList.overviewPolyline;
+                    PolyLineLib.PolylinePoints polylinePoints = PolyLineLib.PolylinePoints();
+                    List<PolyLineLib.PointLatLng> result = polylinePoints.decodePolyline(path.points);
+                    var latlngList=result.map((pointLatLng) => LatLng(pointLatLng.latitude,pointLatLng.longitude));
+                    pickUpPath.addAll(latlngList);
+                  //}
+
+                  JsonMessage jsonMessage=JsonMessage(Constants.pickUpPath,pickUpPath);
+
+                  webSocketListener.onMessage(jsonEncode(jsonMessage));
+
+                }
+
+              } else {
+
+                JsonMessage jsonMessage=JsonMessage();
+                jsonMessage.tag=Constants.errorInRouteFinding;
+                webSocketListener.onMessage(jsonEncode(jsonMessage));
+
+              }
+            });
+
     }
 
-  }
 
-
-  Map<String, dynamic> toJson() => {
-    'tag':tag,
-    'data': data,
-  };
 
 
 
 }
+
