@@ -10,7 +10,7 @@ replace GMSServices.provideAPIKey("your_key_here") with your key.
 Go to android/app/src/main then AndroidManifest.xml
 replace android:value="your_key_here"  with your key.
 
-Go to lib main.dart 
+Go to lib/utils Constants.dart 
 replace const kGoogleApiKey = "your_key_here" with your key.
 
 ## Getting Started
