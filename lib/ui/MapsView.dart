@@ -10,8 +10,6 @@ abstract class MapsView {
 
  updateCabLocation(LatLng latLng);
 
- informCabIsArriving();
-
  informCabArrived();
 
  informTripStart();

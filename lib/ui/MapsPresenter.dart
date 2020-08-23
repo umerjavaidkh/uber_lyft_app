@@ -63,6 +63,19 @@ class MapsPresenter  implements WebSocketListener{
 
   }
 
+  confirmPickup(LatLng pickLat,LatLng dropLat){
+
+    JsonMessage jsonMessage=JsonMessage();
+    jsonMessage.tag=Constants.confirmPickUp;
+    jsonMessage.data=List<LatLng>();
+    jsonMessage.data.add(pickLat);
+    jsonMessage.data.add(dropLat);
+    var jsonData = jsonEncode(jsonMessage);
+    webSocket.sendMessage(jsonData);
+
+
+  }
+
 
 
   @override
@@ -88,6 +101,10 @@ class MapsPresenter  implements WebSocketListener{
       uiView.showNearbyCabs(obj.data);
     }else if(obj.tag==Constants.pickUpPath){
       uiView.showPath(obj.data);
+    }else if(obj.tag==Constants.arrivingToPickup){
+      uiView.updateCabLocation(obj.data[0]);
+    } else if(obj.tag==Constants.captonArrived){
+      uiView.informCabArrived();
     }
 
   }
