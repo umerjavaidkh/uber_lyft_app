@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -22,7 +23,7 @@ class Simulator{
     var pickUpPath = List<LatLng>();
 
 
-    static getFakeNearByCabs(LatLng userLoc,WebSocketListener webSocketListener){
+     getFakeNearByCabs(LatLng userLoc,WebSocketListener webSocketListener){
 
     var size = Random().nextInt(6);
 
@@ -62,10 +63,6 @@ class Simulator{
 
 
     requestCab( LatLng pickUpLocation, LatLng dropLocation, WebSocketListener webSocketListener) {
-
-
-       /* this.pickUpLocation=pickUpLocation;
-        this.dropUpLocation=dropLocation;*/
 
         var randomOperatorForLat = Random().nextInt(1);
         var randomOperatorForLng = Random(1).nextInt(1);
@@ -137,6 +134,35 @@ class Simulator{
     }
 
 
+
+
+      startMovingToPickupLocation(LatLng pickup,LatLng drop, WebSocketListener webSocketListener){
+
+      int pathIndex=1;
+      int pathLength=pickUpPath.length;
+      List dataList= List<LatLng>();
+        Timer.periodic(Duration(seconds: 1), (timer) {
+
+          var latlng=pickUpPath[pathIndex];
+          dataList.add(latlng);
+          JsonMessage jsonMessage=JsonMessage();
+          jsonMessage.tag=Constants.arrivingToPickup;
+          jsonMessage.data=dataList;
+          webSocketListener.onMessage(jsonEncode(jsonMessage));
+
+          if(pathIndex==pathLength-1){
+            timer.cancel();
+            JsonMessage jsonMessage=JsonMessage();
+            jsonMessage.tag=Constants.captonArrived;
+            jsonMessage.data=dataList;
+            webSocketListener.onMessage(jsonEncode(jsonMessage));
+          }
+          dataList.clear();
+
+          pathIndex++;
+
+        });
+      }
 
 
 

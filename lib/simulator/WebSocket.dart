@@ -14,6 +14,8 @@ class WebSocket{
 
   WebSocketListener webSocketListener;
 
+  Simulator _simulator;
+
   static const String TAG= "WebSocket";
 
   WebSocket(WebSocketListener webSocketListener){
@@ -22,6 +24,7 @@ class WebSocket{
 
   connect(){
     webSocketListener.onConnect();
+    _simulator=Simulator();
   }
 
   sendMessage(String data){
@@ -38,7 +41,7 @@ class WebSocket{
 
       var latlng =msg.data.removeAt(0);
 
-      Simulator.getFakeNearByCabs(latlng, webSocketListener);
+      _simulator.getFakeNearByCabs(latlng, webSocketListener);
 
     }else if (msg.tag==Constants.requestForCab){
 
@@ -46,7 +49,13 @@ class WebSocket{
       var pickLat=msg.data.removeAt(0);
 
 
-      Simulator().requestCab(pickLat,dropLat, webSocketListener);
+      _simulator.requestCab(pickLat,dropLat, webSocketListener);
+
+    }else if(msg.tag==Constants.confirmPickUp){
+
+      var dropLat=msg.data.removeAt(1);
+      var pickLat=msg.data.removeAt(0);
+      _simulator.startMovingToPickupLocation(pickLat,dropLat, webSocketListener);
 
     }
 

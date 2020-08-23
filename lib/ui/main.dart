@@ -10,6 +10,8 @@ import 'package:get_it/get_it.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:maps_toolkit/maps_toolkit.dart' as maps_toolkit;
+import 'package:uber_lyft_app/utils/AnimateMarker.dart';
 import 'package:uber_lyft_app/utils/AnimatePolyLine.dart';
 import 'package:uber_lyft_app/utils/Constants.dart';
 import 'package:uber_lyft_app/utils/IconsUtils.dart';
@@ -77,6 +79,8 @@ class MyHomePageState extends State<MyHomePage>
   bool mapLoading = true;
 
   bool requestCabClicked = false;
+
+  bool confirmTripVisibility = false;
 
   AnimationController animationController;
 
@@ -182,6 +186,7 @@ class MyHomePageState extends State<MyHomePage>
               ),
             if (!requestCabClicked) pickAndDropLayout(),
             if (dropLocation != null && !requestCabClicked) _requestCabButton(),
+            if(confirmTripVisibility) _confirmCabButton()
           ],
         ));
   }
@@ -330,6 +335,44 @@ class MyHomePageState extends State<MyHomePage>
     );
   }
 
+
+  Widget _confirmCabButton() {
+    return Container(
+      color: Color(0x40000000),
+      height: MediaQuery.of(context).size.height,
+      alignment: Alignment.bottomCenter,
+      width: MediaQuery.of(context).size.width,
+      child: Container(
+        width: MediaQuery.of(context).size.width,
+        height: 53,
+        margin: EdgeInsets.all(20),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                  color: Color(0xffffff).withAlpha(100),
+                  offset: Offset(2, 4),
+                  blurRadius: 8,
+                  spreadRadius: 2)
+            ],
+            color: Colors.black),
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              confirmTripVisibility = false;
+            });
+            mapsPresenter.confirmPickup(pickupLocation, dropLocation);
+          },
+          child: Text(
+            'Confirm Trip'.toUpperCase(),
+            style: TextStyle(fontSize: 17, color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   informCabArrived() {
     // TODO: implement informCabArrived
@@ -342,11 +385,6 @@ class MyHomePageState extends State<MyHomePage>
     throw UnimplementedError();
   }
 
-  @override
-  informCabIsArriving() {
-    // TODO: implement informCabIsArriving
-    throw UnimplementedError();
-  }
 
   @override
   informTripEnd() {
@@ -378,6 +416,7 @@ class MyHomePageState extends State<MyHomePage>
     setState(() {});
   }
 
+  LatLng cabPrePosition=LatLng(0,0);
   @override
   showPath(List<LatLng> latLngList) async {
     Polyline polyline1 = Polyline(
@@ -391,6 +430,7 @@ class MyHomePageState extends State<MyHomePage>
 
     setState(() {
       nearByCabMarkers.clear();
+      cabPrePosition=latLngList[0];
       nearByCabMarkers.add(Marker(anchor: Offset(0.5, 0.5),
           markerId: MarkerId("123"), icon: cabIcon, position: latLngList[0]));
       nearByCabMarkers.add(Marker(
@@ -399,7 +439,7 @@ class MyHomePageState extends State<MyHomePage>
 
 
       AnimatePolyLine(latLngList,polyline1,this, onFinish: (){
-
+        confirmTripVisibility=true;
       },
     ).animateMe();
 
@@ -419,7 +459,27 @@ class MyHomePageState extends State<MyHomePage>
 
   @override
   updateCabLocation(LatLng latLng) {
-    // TODO: implement updateCabLocation
-    throw UnimplementedError();
+
+    int cabMarkerIndex=nearByCabMarkers.indexWhere((element) => element.markerId.value=="123");
+
+    Marker marker=nearByCabMarkers[cabMarkerIndex];
+
+    setState(() {
+
+     _controller.animateCamera(CameraUpdate.newCameraPosition(
+       CameraPosition(
+         target: cabPrePosition,
+         tilt: 30.0,
+         zoom: 17.0,
+       ),
+     ));
+
+
+   });
+
+    AnimateMarker(this).animaterMarker(cabPrePosition,latLng,marker,cabMarkerIndex);
+
   }
+
+
 }

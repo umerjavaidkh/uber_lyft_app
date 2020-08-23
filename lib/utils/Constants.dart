@@ -8,5 +8,8 @@ class   Constants{
   static const String routesNotAvailable="routesNotAvailable";
   static const String errorInRouteFinding="errorInRouteFinding";
   static const String pickUpPath="pickUpPath";
+  static const String confirmPickUp="confirmPickUp";
+  static const String arrivingToPickup="arrivingToPickup";
+  static const String captonArrived="captonArrived";
 
 }

@@ -1,5 +1,6 @@
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:math';
 
 class  MapUtils{
 
@@ -22,5 +23,33 @@ class  MapUtils{
         northeast: LatLng(maxLat,maxLong)
     ), 20));
   }
+
+  static num radsToDegrees(num rad) {
+    return (rad * 180.0) / pi;
+  }
+
+  static num getRotation(LatLng start, LatLng end) {
+  double latDifference    = (start.latitude - end.latitude).abs();
+  double lngDifference    = (start.longitude - end.longitude).abs();
+  num rotation = -1;
+
+  if(start.latitude < end.latitude && start.longitude < end.longitude) {
+  rotation = radsToDegrees(atan(lngDifference / latDifference)).toDouble();
+  }
+  else if (start.latitude >= end.latitude && start.longitude < end.longitude) {
+  rotation = (90 - radsToDegrees(atan(lngDifference / latDifference)) + 90).toDouble();
+  }
+  else if(start.latitude >= end.latitude && start.longitude >= end.longitude) {
+  rotation = (radsToDegrees(atan(lngDifference / latDifference)) + 180).toDouble();
+  }
+  else if (start.latitude < end.latitude && start.longitude >= end.longitude) {
+  rotation =
+  (90 - radsToDegrees(atan(lngDifference / latDifference)) + 270).toDouble();
+  }
+
+  return rotation;
+}
+
+
 
 }

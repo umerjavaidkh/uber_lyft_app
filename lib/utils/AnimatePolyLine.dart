@@ -10,7 +10,7 @@ class AnimatePolyLine {
   static const String PolylineID="12345";
   MyHomePageState _myHomePageState;
   int _divideInToParts=10;
-  int _repeatCount=5;
+  int _repeatCount=2;
   int _oneAnimDuration=100;
   AnimationListener _onFinish;
 
@@ -59,7 +59,7 @@ class AnimatePolyLine {
               endCap: Cap.buttCap);
 
           _myHomePageState.cabToPickUpLine.add(pre);
-          if(cycle==_repeatCount && p>total){
+          if(cycle==_repeatCount && p>=total){
             this._onFinish();
           }
         });
