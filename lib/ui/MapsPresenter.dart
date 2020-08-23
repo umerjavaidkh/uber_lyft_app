@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:uber_lyft_app/simulator/Simulator.dart';
+import 'package:uber_lyft_app/simulator/JsonMessage.dart';
 import 'package:uber_lyft_app/simulator/WebSocket.dart';
 import 'package:uber_lyft_app/utils/Constants.dart';
 
 import 'MapsView.dart';
-import 'NetworkService.dart';
-import 'simulator/WebSocketListener.dart';
+import '../NetworkService.dart';
+import '../simulator/WebSocketListener.dart';
 
 class MapsPresenter  implements WebSocketListener{
 
@@ -42,13 +42,25 @@ class MapsPresenter  implements WebSocketListener{
 
 
    requestNearbyCabs(LatLng latLng) {
-
      JsonMessage jsonMessage=JsonMessage();
-     jsonMessage.tag=Constants.requestForCabs;
+     jsonMessage.tag=Constants.nearByCabs;
      jsonMessage.data=List<LatLng>();
      jsonMessage.data.add(latLng);
      var jsonData = jsonEncode(jsonMessage);
      webSocket.sendMessage(jsonData);
+  }
+
+  requestCab(LatLng pickLat,LatLng dropLat){
+
+    JsonMessage jsonMessage=JsonMessage();
+    jsonMessage.tag=Constants.requestForCab;
+    jsonMessage.data=List<LatLng>();
+    jsonMessage.data.add(pickLat);
+    jsonMessage.data.add(dropLat);
+    var jsonData = jsonEncode(jsonMessage);
+    webSocket.sendMessage(jsonData);
+
+
   }
 
 
@@ -72,8 +84,10 @@ class MapsPresenter  implements WebSocketListener{
     JsonMessage obj=JsonMessage.fromJson(map);
 
 
-    if(obj.tag==Constants.requestForCabs){
+    if(obj.tag==Constants.nearByCabs){
       uiView.showNearbyCabs(obj.data);
+    }else if(obj.tag==Constants.pickUpPath){
+      uiView.showPath(obj.data);
     }
 
   }

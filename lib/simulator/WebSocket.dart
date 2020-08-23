@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:uber_lyft_app/simulator/Simulator.dart';
 import 'package:uber_lyft_app/utils/Constants.dart';
 
+import 'JsonMessage.dart';
 import 'WebSocketListener.dart';
 
 class WebSocket{
@@ -31,13 +32,21 @@ class WebSocket{
 
     JsonMessage msg=JsonMessage.fromJson(map);
 
-    if(msg.tag==Constants.requestForCabs){
+    if(msg.tag==Constants.nearByCabs){
 
       //msg.data=(msg.data as List<LatLng>).map((e) => LatLng(e.latitude,e.longitude)).toList();
 
       var latlng =msg.data.removeAt(0);
 
       Simulator.getFakeNearByCabs(latlng, webSocketListener);
+
+    }else if (msg.tag==Constants.requestForCab){
+
+      var dropLat=msg.data.removeAt(1);
+      var pickLat=msg.data.removeAt(0);
+
+
+      Simulator().requestCab(pickLat,dropLat, webSocketListener);
 
     }
 
