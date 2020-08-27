@@ -14,6 +14,9 @@ Go to lib/utils Constants.dart
 replace const kGoogleApiKey = "your_key_here" with your key.
 
 
+You also have to enable Google Places Api for flutter_google_places: ^0.2.6 to work.
+
+
 <p align="center">
     <img src="https://miro.medium.com/max/2000/1*WRp686xdFbGW3nGfu4am0A.jpeg">
 </p>
