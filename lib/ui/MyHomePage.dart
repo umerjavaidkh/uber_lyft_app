@@ -27,7 +27,6 @@ class MyHomePage extends StatefulWidget {
 class MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin
     implements MapsView {
-
   GoogleMapController _controller;
 
   final locationService = getIt.get<LocationProvider>();
@@ -215,22 +214,14 @@ class MyHomePageState extends State<MyHomePage>
     setState(() {});
   }
 
-  LatLng cabPrePosition = LatLng(0, 0);
+
 
   @override
   showPath(List<LatLng> latLngList) async {
-    Polyline polyline1 = Polyline(
-        visible: true,
-        polylineId: PolylineId("12345"),
-        points: latLngList,
-        color: Colors.red,
-        width: 3,
-        startCap: Cap.roundCap,
-        endCap: Cap.buttCap);
+
 
     setState(() {
       nearByCabMarkers.clear();
-      cabPrePosition = latLngList[0];
       nearByCabMarkers.add(Marker(
           anchor: Offset(0.5, 0.5),
           markerId: MarkerId("123"),
@@ -243,11 +234,17 @@ class MyHomePageState extends State<MyHomePage>
 
     AnimatePolyLine(
       latLngList,
-      polyline1,
-      this,
+      cabToPickUpLine,
+
       onFinish: () {
         confirmTripVisibility = true;
       },
+      onUpdate: (){
+        setState(() {
+          // update cabToPickUpLine on map
+        });
+      },
+
     ).animateMe();
 
     MapUtils.setMapFitToPolyLine(cabToPickUpLine, _controller);
@@ -269,14 +266,17 @@ class MyHomePageState extends State<MyHomePage>
     setState(() {
       _controller.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(
-          target: cabPrePosition,
+          target: marker.position,
           tilt: 30.0,
           zoom: 17.0,
         ),
       ));
     });
 
-    AnimateMarker(this)
-        .animaterMarker(cabPrePosition, latLng, marker, cabMarkerIndex);
+    AnimateMarker(onMarkerPosUpdate: (Marker marker) {
+      setState(() {
+        nearByCabMarkers[cabMarkerIndex] = marker;
+      });
+    }).animaterMarker(marker.position, latLng, marker);
   }
 }

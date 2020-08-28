@@ -1,23 +1,23 @@
-
-
-
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:maps_toolkit/maps_toolkit.dart' as maps_toolkit;
-import 'package:uber_lyft_app/ui/MyHomePage.dart';
 import 'package:uber_lyft_app/utils/MapUtils.dart';
 
-class AnimateMarker{
 
-  MyHomePageState _myHomePageState;
+typedef  MarkerUpdateListener=Function(Marker currentMarker);
+
+
+class AnimateMarker{
 
   int _divideInToParts=10;
   int _oneAnimDuration=90;
 
-  AnimateMarker(MyHomePageState myHomePageState){
-    this._myHomePageState=myHomePageState;
+  MarkerUpdateListener _onMarkerPosUpdate;
+
+  AnimateMarker({MarkerUpdateListener onMarkerPosUpdate}){
+    _onMarkerPosUpdate=onMarkerPosUpdate;
   }
 
-  animaterMarker(LatLng from, LatLng to,Marker marker,int cabMarkerIndex) async{
+  animaterMarker(LatLng from, LatLng to,Marker marker) async{
 
     List<maps_toolkit.LatLng> list=List();
     List<double> angleList=List();
@@ -36,23 +36,22 @@ class AnimateMarker{
     for (int index=0; index<list.length; index++){
       maps_toolkit.LatLng item = list[index];
       await Future.delayed(Duration(milliseconds: _oneAnimDuration)).then((_) {
-        _myHomePageState.setState(() {
-          Marker tempM = Marker(
-            markerId: marker.markerId,
-            position: LatLng(item.latitude, item.longitude),
-            anchor: marker.anchor,
-            rotation: angleList[index],
-            icon: marker.icon,
-          );
 
-          _myHomePageState.nearByCabMarkers[cabMarkerIndex] = tempM;
+        Marker tempM = Marker(
+          markerId: marker.markerId,
+          position: LatLng(item.latitude, item.longitude),
+          anchor: marker.anchor,
+          rotation: angleList[index],
+          icon: marker.icon,
+        );
+
+        _onMarkerPosUpdate(tempM);
 
           if(index==list.length-1){
-            list.clear();
-            _myHomePageState.cabPrePosition=to;
+          list.clear();
+          angleList.clear();
           }
 
-        });
       });
     }
   }
