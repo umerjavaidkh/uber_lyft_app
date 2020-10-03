@@ -57,6 +57,12 @@ class WebSocket{
       var pickLat=msg.data.removeAt(0);
       _simulator.startMovingToPickupLocation(pickLat,dropLat, webSocketListener);
 
+    }else if(msg.tag==Constants.onStartTrip){
+
+      var dropLat=msg.data.removeAt(1);
+      var pickLat=msg.data.removeAt(0);
+      _simulator.onStartTrip(pickLat,dropLat, webSocketListener);
+
     }
 
   }

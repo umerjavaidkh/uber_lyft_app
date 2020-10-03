@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:uber_lyft_app/utils/LocationProvider.dart';
 
 import 'MyHomePage.dart';
+import 'MyHomePageRevamp.dart';
 
 // This is our global ServiceLocator
 GetIt getIt = GetIt.instance;
@@ -26,7 +27,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo'),
+      //home: MyHomePage(title: 'Flutter Demo'),
+      home: MyHomePageRevamp(title: 'Flutter Demo'),
     );
   }
 }

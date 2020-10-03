@@ -17,11 +17,13 @@ class AnimatePolyLine {
   int _oneAnimDuration = 100;
   AnimationListener _onFinish;
   UpdatePolyline _onUpdate;
+  MaterialColor _color = Colors.red;
 
-  AnimatePolyLine(List<LatLng> latLngList, Set<Polyline> cabToPickUpLine,
+  AnimatePolyLine(List<LatLng> latLngList, Set<Polyline> cabToPickUpLine,MaterialColor color,
       {AnimationListener onFinish, UpdatePolyline onUpdate}) {
     this._latLngList = latLngList;
     this._cabToPickUpLine = cabToPickUpLine;
+    this._color = color;
     this._onUpdate = onUpdate;
     this._onFinish = onFinish;
   }
@@ -31,7 +33,7 @@ class AnimatePolyLine {
         visible: true,
         polylineId: PolylineId("12345"),
         points: _latLngList,
-        color: Colors.red,
+        color: Colors.black,
         width: 3,
         startCap: Cap.roundCap,
         endCap: Cap.buttCap);
@@ -68,7 +70,7 @@ class AnimatePolyLine {
             visible: true,
             polylineId: PolylineId(p.toString()),
             points: sublist,
-            color: Colors.blue,
+            color: _color,
             width: 3,
             startCap: Cap.roundCap,
             endCap: Cap.buttCap);

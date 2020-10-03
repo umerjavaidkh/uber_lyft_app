@@ -8,7 +8,11 @@ abstract class MapsView {
 
  showPath(List<LatLng> latLngList);
 
+ showPathDest(List<LatLng> latLngList);
+
  updateCabLocation(LatLng latLng);
+
+ updateCabLocationDest(LatLng latLng);
 
  informCabArrived();
 

@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:uber_lyft_app/simulator/JsonMessage.dart';
 import 'package:uber_lyft_app/simulator/WebSocket.dart';
@@ -76,6 +77,19 @@ class MapsPresenter  implements WebSocketListener{
 
   }
 
+  onStartTrip(LatLng pickLat,LatLng dropLat){
+
+    JsonMessage jsonMessage=JsonMessage();
+    jsonMessage.tag=Constants.onStartTrip;
+    jsonMessage.data=List<LatLng>();
+    jsonMessage.data.add(pickLat);
+    jsonMessage.data.add(dropLat);
+    var jsonData = jsonEncode(jsonMessage);
+    webSocket.sendMessage(jsonData);
+
+
+  }
+
 
 
   @override
@@ -105,7 +119,15 @@ class MapsPresenter  implements WebSocketListener{
       uiView.updateCabLocation(obj.data[0]);
     } else if(obj.tag==Constants.captonArrived){
       uiView.informCabArrived();
+    }else if(obj.tag==Constants.DestinationPath) {
+      uiView.showPathDest(obj.data);
+    } else if(obj.tag==Constants.movingToDestTrip){
+      uiView.updateCabLocationDest(obj.data[0]);
+    }else if(obj.tag==Constants.destArrivedTrip){
+      uiView.informTripEnd();
     }
+
+
 
   }
 
