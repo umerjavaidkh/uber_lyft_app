@@ -4,8 +4,6 @@ abstract class MapsView {
 
  showNearbyCabs(List<LatLng> latLngList);
 
- informCabBooked();
-
  showPath(List<LatLng> latLngList);
 
  showPathDest(List<LatLng> latLngList);
@@ -15,8 +13,6 @@ abstract class MapsView {
  updateCabLocationDest(LatLng latLng);
 
  informCabArrived();
-
- informTripStart();
 
  informTripEnd();
 

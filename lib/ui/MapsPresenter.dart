@@ -42,7 +42,7 @@ class MapsPresenter  implements WebSocketListener{
   }
 
 
-   requestNearbyCabs(LatLng latLng) {
+   showNearbyCabs(LatLng latLng) {
      JsonMessage jsonMessage=JsonMessage();
      jsonMessage.tag=Constants.nearByCabs;
      jsonMessage.data=List<LatLng>();

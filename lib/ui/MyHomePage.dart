@@ -101,7 +101,7 @@ class MyHomePageState extends State<MyHomePage>
     mycontroller.setMapStyle(_mapStyle);
     mapLoading = false;
     _getUserLocationName(center);
-    mapsPresenter.requestNearbyCabs(center);
+    mapsPresenter.showNearbyCabs(center);
   }
 
   @override

@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:uber_lyft_app/ui/states/HomePageState.dart';
 import 'package:uber_lyft_app/ui/widgets/GoogleMapWidget.dart';
 import 'package:uber_lyft_app/ui/widgets/RequestCabButton.dart';
-import 'package:uber_lyft_app/utils/LocationProvider.dart';
-
-
 import '../NetworkService.dart';
 import 'MapsPresenter.dart';
 import 'MapsView.dart';
-import 'main.dart';
 import 'widgets/PickAndDropLayout.dart';
 
 class MyHomePageRevamp extends StatefulWidget {
@@ -25,67 +22,39 @@ class MyHomePageState extends State<MyHomePageRevamp>
     with SingleTickerProviderStateMixin
     implements MapsView {
 
-
-  final locationService = getIt.get<LocationProvider>();
-
-  LatLng center =null;
-
-  LatLng pickupLocation;
-
-  LatLng dropLocation;
-
-  String pickUpLocationTag = "Pickup Location";
-
-  String dropLocationTag = "Drop Location";
-
-  bool mapLoading = true;
-
-  bool requestCabClicked = false;
-
-  bool confirmTripVisibility = false;
-
-  bool onCabArrivedVisibility = false;
-
-  MapsPresenter mapsPresenter;
-
-  GoogleMapWidgetOBJ _googleMapWidgetObj;
+  HomePageState _homePageState = HomePageState();
 
   @override
   void initState() {
     super.initState();
-
-
     _getUserLocation();
-
-    mapsPresenter = MapsPresenter(NetworkService());
-    mapsPresenter.onAttach(this);
+    _homePageState.mapsPresenter = MapsPresenter(NetworkService());
+    _homePageState.mapsPresenter.onAttach(this);
 
   }
 
   void _getUserLocation() async {
-    Position position = await locationService.provideCurrentLocation();
+    Position position = await _homePageState.locationService.provideCurrentLocation();
     setState(() {
-      center = LatLng(position.latitude, position.longitude);
+      _homePageState.center = LatLng(position.latitude, position.longitude);
     });
   }
 
   void _getUserLocationName(LatLng latLng) async {
-    Placemark position = await locationService.getAddressFromLocation(
+    Placemark position = await _homePageState.locationService.getAddressFromLocation(
         latLng.latitude, latLng.longitude);
     setState(() {
-      pickupLocation =
+      _homePageState.pickupLocation =
           LatLng(position.position.latitude, position.position.longitude);
-      pickUpLocationTag = position.name + ", " + position.administrativeArea;
+      _homePageState.pickUpLocationTag = position.name + ", " + position.administrativeArea;
     });
   }
 
-
-
   void _onMapCreated(GoogleMapWidgetOBJ self) {
-    _googleMapWidgetObj=self;
-    mapLoading = false;
-    _getUserLocationName(center);
-    mapsPresenter.requestNearbyCabs(center);
+    _homePageState.googleMapWidgetObj=self;
+    _homePageState.mapLoading = false;
+    _getUserLocationName(_homePageState.center);
+    _homePageState.mapsPresenter.showNearbyCabs(_homePageState.center);
     
   }
 
@@ -95,20 +64,20 @@ class MyHomePageState extends State<MyHomePageRevamp>
         resizeToAvoidBottomPadding: false,
         body: Stack(
           children: <Widget>[
-            if (center != null)
+            if (_homePageState.center != null)
               AnimatedOpacity(
-                opacity: mapLoading ? 0 : 1,
+                opacity: _homePageState.mapLoading ? 0 : 1,
                 curve: Curves.easeInOut,
                 duration: Duration(milliseconds: 1000),
                 child: Container(
                   color: Colors.white24,
-                  child: GoogleMapWidget( center,
+                  child: GoogleMapWidget( _homePageState.center,
                     onMapCreatedListener: (GoogleMapWidgetOBJ self){
                       _onMapCreated(self);
                     },
                     confirmTripVisibility: (){
                       setState(() {
-                         confirmTripVisibility = true;
+                        _homePageState.confirmTripVisibility = true;
                       });
 
                     },
@@ -123,45 +92,45 @@ class MyHomePageState extends State<MyHomePageRevamp>
                 child: CircularProgressIndicator(),
               ),
             //if (!requestCabClicked) pickAndDropLayout(),
-            if (!requestCabClicked)
+            if (!_homePageState.requestCabClicked)
               PickAndDropLayout(
-                pickupLocation,
-                pickUpLocationTag,
+                _homePageState.pickupLocation,
+                _homePageState.pickUpLocationTag,
                 onPickLocation: (LatLng latlng) {
-                  pickupLocation = latlng;
+                  _homePageState.pickupLocation = latlng;
                 },
                 onDropLocation: (LatLng latln) {
                   setState(() {
-                    dropLocation = latln;
+                    _homePageState.dropLocation = latln;
                   });
                 },
               ),
-            if (dropLocation != null && !requestCabClicked)
+            if (_homePageState.dropLocation != null && !_homePageState.requestCabClicked)
               //_requestCabButton(),
 
               RequestButton("Request Cab", onTap: () {
                 setState(() {
-                  requestCabClicked = true;
+                  _homePageState.requestCabClicked = true;
                 });
-                mapsPresenter.requestCab(pickupLocation, dropLocation);
+                _homePageState.mapsPresenter.requestCab(_homePageState.pickupLocation, _homePageState.dropLocation);
               }),
 
-            if (confirmTripVisibility)
+            if (_homePageState.confirmTripVisibility)
               RequestButton("Confirm Trip", onTap: () {
                 setState(() {
-                  confirmTripVisibility = false;
+                  _homePageState.confirmTripVisibility = false;
                 });
 
-                mapsPresenter.confirmPickup(pickupLocation, dropLocation);
+                _homePageState.mapsPresenter.confirmPickup(_homePageState.pickupLocation, _homePageState.dropLocation);
               }),
 
-            if (onCabArrivedVisibility)
+            if (_homePageState.onCabArrivedVisibility)
               RequestButton("START Trip", onTap: () {
                 setState(() {
-                  onCabArrivedVisibility = false;
+                  _homePageState.onCabArrivedVisibility = false;
                 });
-                _googleMapWidgetObj.clearMap();
-                mapsPresenter.onStartTrip(pickupLocation, dropLocation);
+                _homePageState.googleMapWidgetObj.clearMap();
+                _homePageState.mapsPresenter.onStartTrip(_homePageState.pickupLocation, _homePageState.dropLocation);
               })
           ],
         ));
@@ -171,29 +140,16 @@ class MyHomePageState extends State<MyHomePageRevamp>
   informCabArrived() {
 
     setState(() {
-      onCabArrivedVisibility = true;
+      _homePageState.onCabArrivedVisibility = true;
     });
 
   }
 
   @override
-  informCabBooked() {
-    // TODO: implement informCabBooked
-    throw UnimplementedError();
-  }
-
-  @override
   informTripEnd() {
 
-
-
   }
 
-  @override
-  informTripStart() {
-    // TODO: implement informTripStart
-    throw UnimplementedError();
-  }
 
   @override
   showDirectionApiFailedError(String error) {
@@ -203,14 +159,14 @@ class MyHomePageState extends State<MyHomePageRevamp>
 
   @override
   showNearbyCabs(List<LatLng> latLngList) {
-    
-    _googleMapWidgetObj.showNearbyCabs(latLngList);
+
+    _homePageState.googleMapWidgetObj.showNearbyCabs(latLngList);
   }
 
   @override
   showPath(List<LatLng> latLngList) async {
 
-    _googleMapWidgetObj.showPath(latLngList);
+    _homePageState.googleMapWidgetObj.showPath(latLngList);
 
   }
 
@@ -223,21 +179,18 @@ class MyHomePageState extends State<MyHomePageRevamp>
   @override
   updateCabLocation(LatLng latLng) {
 
-    _googleMapWidgetObj.updateCabLocation(latLng);
+    _homePageState.googleMapWidgetObj.updateCabLocation(latLng);
   }
 
   @override
   showPathDest(List<LatLng> latLngList) {
 
-    _googleMapWidgetObj.showDestinationPath(latLngList);
+    _homePageState.googleMapWidgetObj.showDestinationPath(latLngList);
   }
-
 
   @override
   updateCabLocationDest(LatLng latLng) {
 
-    _googleMapWidgetObj.updateDestCabLocation(latLng);
+    _homePageState.googleMapWidgetObj.updateDestCabLocation(latLng);
   }
-
-
 }
