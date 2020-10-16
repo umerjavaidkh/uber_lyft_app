@@ -13,7 +13,7 @@ replace android:value="your_key_here"  with your key.
 Go to lib/utils Constants.dart 
 replace const kGoogleApiKey = "your_key_here" with your key.
 
-Go to bib/utils/RequestPlace.dart
+Go to lib/utils/RequestPlace.dart
 line 14:  components: [new Component(Component.country, "ae")]); 
 change "ae" to your respective country.
 
