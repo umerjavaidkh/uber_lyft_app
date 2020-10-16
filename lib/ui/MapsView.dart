@@ -4,15 +4,15 @@ abstract class MapsView {
 
  showNearbyCabs(List<LatLng> latLngList);
 
- informCabBooked();
-
  showPath(List<LatLng> latLngList);
+
+ showPathDest(List<LatLng> latLngList);
 
  updateCabLocation(LatLng latLng);
 
- informCabArrived();
+ updateCabLocationDest(LatLng latLng);
 
- informTripStart();
+ informCabArrived();
 
  informTripEnd();
 

@@ -101,7 +101,7 @@ class MyHomePageState extends State<MyHomePage>
     mycontroller.setMapStyle(_mapStyle);
     mapLoading = false;
     _getUserLocationName(center);
-    mapsPresenter.requestNearbyCabs(center);
+    mapsPresenter.showNearbyCabs(center);
   }
 
   @override
@@ -235,7 +235,7 @@ class MyHomePageState extends State<MyHomePage>
     AnimatePolyLine(
       latLngList,
       cabToPickUpLine,
-
+      Colors.red,
       onFinish: () {
         confirmTripVisibility = true;
       },
@@ -278,5 +278,17 @@ class MyHomePageState extends State<MyHomePage>
         nearByCabMarkers[cabMarkerIndex] = marker;
       });
     }).animaterMarker(marker.position, latLng, marker);
+  }
+
+  @override
+  updateCabLocationDest(LatLng latLng) {
+    // TODO: implement updateCabLocationDest
+    throw UnimplementedError();
+  }
+
+  @override
+  showPathDest(List<LatLng> latLngList) {
+    // TODO: implement showPathDest
+    throw UnimplementedError();
   }
 }
