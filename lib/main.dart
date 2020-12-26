@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:uber_lyft_app/utils/LocationProvider.dart';
 
-import 'MyHomePage.dart';
-import 'MyHomePageRevamp.dart';
+
+import 'ui/MyHomePageRevamp.dart';
+
 
 // This is our global ServiceLocator
 GetIt getIt = GetIt.instance;

@@ -5,7 +5,7 @@ import 'package:uber_lyft_app/ui/widgets/GoogleMapWidget.dart';
 import 'package:uber_lyft_app/utils/LocationProvider.dart';
 
 import '../MapsPresenter.dart';
-import '../main.dart';
+import '../../main.dart';
 
 class HomePageState{
 

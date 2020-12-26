@@ -1,7 +1,4 @@
 
-
-
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +9,7 @@ import 'package:uber_lyft_app/utils/IconsUtils.dart';
 import 'package:uber_lyft_app/utils/LocationProvider.dart';
 import 'package:uber_lyft_app/utils/MapUtils.dart';
 
-import '../main.dart';
+import '../../main.dart';
 
 
 
