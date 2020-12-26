@@ -13,7 +13,7 @@ import 'package:uber_lyft_app/utils/MapUtils.dart';
 import '../NetworkService.dart';
 import 'MapsPresenter.dart';
 import 'MapsView.dart';
-import 'main.dart';
+import '../main.dart';
 import 'widgets/PickAndDropLayout.dart';
 
 class MyHomePage extends StatefulWidget {
