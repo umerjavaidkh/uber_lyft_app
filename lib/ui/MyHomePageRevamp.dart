@@ -61,7 +61,7 @@ class MyHomePageState extends State<MyHomePageRevamp>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        resizeToAvoidBottomPadding: false,
+        resizeToAvoidBottomInset: false,
         body: Stack(
           children: <Widget>[
             if (_homePageState.center != null)

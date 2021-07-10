@@ -11,6 +11,6 @@ Future<Prediction> getPaceOverlay (BuildContext context) async{
         apiKey: Constants.kGoogleApiKey,
         mode: Mode.overlay, // Mode.fullscreen
         language: "en",
-        components: [new Component(Component.country, "ae")]);
+        components: [new Component(Component.country, "sa")]);
 
   }
